@@ -2,6 +2,7 @@ import { useState } from 'react';
 import React from 'react';
 import axios from 'axios';
 import './chat.css';
+import Reply from './reply';
 
 interface SearchResult {
   link: string;
@@ -10,10 +11,15 @@ interface SearchResult {
   displayed_link: string;
   thumbnail: string;
 }
+
+interface ReplyType {
+  searchResult: SearchResult[];
+  aiResult: string;
+}
+
 const ChatBox = () => {
   const [query, setQuery] = useState("");
-  const [searchResponse, setSearchResponse] = useState<SearchResult[]>([]);
-  const [aiResponse, setAiResponse] = useState<string>();
+  const [replies, setReplies] = useState<ReplyType[]>([]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setQuery(e.target.value);
@@ -24,10 +30,10 @@ const ChatBox = () => {
     if (!query.trim()) return;
     try {
       const result = await axios.post("http://localhost:5000/", { query });
-      setAiResponse(result.data.ai_response);
-      setSearchResponse(result.data.search_response);
-      console.log(aiResponse)
-      console.log(searchResponse)
+      setReplies((prevReplies) => [
+        ...prevReplies,
+        { searchResult: result.data.search_response, aiResult: result.data.ai_response },
+      ]);
     } catch (error) {
       console.error("Error sending query to backend:", error);
     }
@@ -47,26 +53,9 @@ const ChatBox = () => {
           Send
         </button>
       </form>
-      {searchResponse && searchResponse.length > 0 && (
-        <div className="search-response">
-          <h3>Search Results:</h3>
-          <ul>
-            {searchResponse.map((result, index) => (
-              <li key={index}>
-                <a href={result.link} target="_blank" rel="noopener noreferrer">
-                  {result.title}
-                </a>
-              </li>
-            ))}
-          </ul>
-        </div>
-      )}
-      {aiResponse && (
-        <div className="ai-response">
-          <h3>AI Response:</h3>
-          <p>{aiResponse}</p>
-        </div>
-      )}
+      {replies && replies.map((reply, index) => {
+        return <Reply key={index} searchResult={reply.searchResult} aiResult={reply.aiResult} />
+      })}
     </div>
   );
 };

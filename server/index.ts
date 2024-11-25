@@ -15,6 +15,7 @@ app.post('/', async (req, res) => {
   try {
     const { query } = req.body;
     const prompt = query;
+    console.log(query);
 
     const ai_result = await model.generateContent(prompt);
     const search_result = await getJson({
